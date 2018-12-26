@@ -27,7 +27,7 @@ public class Book implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	@Id
-	Long isbn;
+	long isbn;
 	String title;
 	@ManyToMany
 	Set<Author> authors;

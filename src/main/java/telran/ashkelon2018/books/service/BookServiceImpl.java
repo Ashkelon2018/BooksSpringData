@@ -4,10 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import telran.ashkelon2018.books.dao.AuthorRepository;
 import telran.ashkelon2018.books.dao.BookRepository;
@@ -65,39 +66,67 @@ public class BookServiceImpl implements BookService {
 	}
 
 	@Override
+	@Transactional
 	public BookDto removeBook(Long isbn) {
-		// TODO Auto-generated method stub
-		return null;
+		Book book = bookRepository.findById(isbn).orElse(null);
+		if (book == null) {
+			return null;
+		}
+		bookRepository.deleteById(isbn);
+		return bookToBookDto(book);
+	}
+
+	private BookDto bookToBookDto(Book book) {
+		Set<AuthorDto> authors = book.getAuthors().stream()
+				.map(this::authorToAuthorDto)
+				.collect(Collectors.toSet());
+		return new BookDto(book.getIsbn(), book.getTitle(),authors, book.getPublisher().getPublisherName());
+	}
+	
+	private AuthorDto authorToAuthorDto(Author author) {
+		return new AuthorDto(author.getName(), author.getBirthDate());
 	}
 
 	@Override
 	public BookDto getBookByIsbn(Long isbn) {
-		// TODO Auto-generated method stub
-		return null;
+		Book book = bookRepository.findById(isbn).orElse(null);
+		if (book == null) {
+			return null;
+		}
+		return bookToBookDto(book);
 	}
 
 	@Override
+	@Transactional(readOnly=true)
 	public Iterable<BookDto> getBooksByAuthor(String authorName) {
-		// TODO Auto-generated method stub
-		return null;
+		return bookRepository.findByAuthorsName(authorName)
+				.map(this::bookToBookDto)
+				.collect(Collectors.toSet());
 	}
 
 	@Override
+	@Transactional(readOnly=true)
 	public Iterable<BookDto> getBooksByPublisher(String publisherName) {
-		// TODO Auto-generated method stub
-		return null;
+		return bookRepository.findByPublisherPublisherName(publisherName)
+				.map(this::bookToBookDto)
+				.collect(Collectors.toSet());
 	}
 
 	@Override
+	@Transactional(readOnly=true)
 	public Iterable<AuthorDto> getBookAuthors(Long isbn) {
-		// TODO Auto-generated method stub
-		return null;
+		Book book = bookRepository.findById(isbn).orElse(null);
+		if (book == null) {
+			return null;
+		}
+		return book.getAuthors().stream()
+				.map(this::authorToAuthorDto)
+				.collect(Collectors.toSet());
 	}
 
 	@Override
 	public Iterable<String> getPublishersByAuthor(String authorName) {
-		// TODO Auto-generated method stub
-		return null;
+		return publisherRepository.findPublishersByAuthor(authorName);
 	}
 
 }
